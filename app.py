@@ -42,16 +42,21 @@ def gen():
 
     if len(senders) >= max_users:
         return jsonify({'message': "Server busy serving others, please try later"}), 503
+    
+    if request.environ.get('HTTP_X_FORWARDED_FOR') is None:
+        addr = request.environ['REMOTE_ADDR']
+    else:
+        addr = request.environ['HTTP_X_FORWARDED_FOR'] # if behind a proxy
 
-    if(request.remote_addr in senders):
+    if(addr in senders):
         return jsonify({'message': "Server already serving you, please try later"}), 429
     
-    senders.append(request.remote_addr)
+    senders.append(addr)
 
     result = subprocess.run(['./seed'], stdout=subprocess.PIPE, cwd=bin_dir)
     
     try:
-        senders.remove(request.remote_addr)
+        senders.remove(addr)
     except ValueError:
         pass
 
