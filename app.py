@@ -10,10 +10,9 @@ bin_dir = config['bin_dir']
 
 app = Flask(__name__)
 
-
 senders = []
 
-def parse_output(output: str):
+def parse_output(output: str) -> dict:
     lines = output.splitlines()
     verif_next = False
     
@@ -40,6 +39,7 @@ def homepage():
 @app.route("/generate")
 def gen():
     global senders
+
     if len(senders) >= max_users:
         return jsonify({'message': "Server busy serving others, please try later"}), 503
 
@@ -47,7 +47,6 @@ def gen():
         return jsonify({'message': "Server already serving you, please try later"}), 429
     
     senders.append(request.remote_addr)
-
 
     result = subprocess.run(['./seed'], stdout=subprocess.PIPE, cwd=bin_dir)
     
@@ -57,9 +56,7 @@ def gen():
         pass
 
     return jsonify(parse_output(result.stdout.decode()))
-    # return result.stdout.decode()
 
-    # return jsonify({'Hello': 'World', 'count': str(count)})
 
 if __name__ == '__main__':
     app.run(debug=True, port=80, host='0.0.0.0')
